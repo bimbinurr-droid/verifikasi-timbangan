@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Verifikasi Timbangan</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 10px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+
+    input[readonly] {
+      background: #eaeaea;
+    }
+
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    button:active {
+      background: #0056b3;
+    }
+
+    .status {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Verifikasi / Kalibrasi Timbangan</h2>
+
+  <label>ID Timbangan</label>
+  <input type="text" id="id_timbangan" readonly>
+
+  <label>Nama Timbangan</label>
+  <input type="text" id="nama_timbangan" readonly>
+
+  <label>Jenis Kegiatan</label>
+  <select id="kegiatan">
+    <option value="Verifikasi">Verifikasi</option>
+    <option value="Kalibrasi">Kalibrasi</option>
+  </select>
+
+  <label>Hasil Timbang Sebelum Beban (kg)</label>
+  <input type="number" id="sebelum" step="0.01" required>
+
+  <label>Beban Standar (kg)</label>
+  <input type="number" id="beban" step="0.01" value="10" required>
+
+  <label>Hasil Timbang Setelah Beban (kg)</label>
+  <input type="number" id="setelah" step="0.01" required>
+
+  <label>Nama Petugas</label>
+  <input type="text" id="petugas" required>
+
+  <button onclick="kirimData()">SIMPAN DATA</button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  // GANTI dengan URL Web App Google Apps Script
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkYQ_6tymzySmeoIaEP1WPWTwEkLGBR3uFnVFCa3n49XkJwzUnTK7PAFGyWo4rIHeELQ/exec";
+
+  // Mapping ID Timbangan → Nama
+  const dataTimbangan = {
+    "TB-012": "Timbangan Hopper 1",
+    "TB-013": "Timbangan Hopper 2",
+    "TB-014": "Timbangan Packing"
+  };
+
+  // Ambil parameter ID dari URL
+  const params = new URLSearchParams(window.location.search);
+  const idTimbangan = params.get("id");
+
+  document.getElementById("id_timbangan").value = idTimbangan || "Tidak Diketahui";
+  document.getElementById("nama_timbangan").value =
+    dataTimbangan[idTimbangan] || "Belum Terdaftar";
+
+  function kirimData() {
+    const data = {
+      id_timbangan: document.getElementById("id_timbangan").value,
+      nama_timbangan: document.getElementById("nama_timbangan").value,
+      kegiatan: document.getElementById("kegiatan").value,
+      sebelum_beban: document.getElementById("sebelum").value,
+      setelah_beban: document.getElementById("setelah").value,
+      beban_standar: document.getElementById("beban").value,
+      petugas: document.getElementById("petugas").value
+    };
+
+    document.getElementById("status").innerHTML = "⏳ Mengirim data...";
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        document.getElementById("status").innerHTML = "✅ Data berhasil disimpan";
+        document.getElementById("sebelum").value = "";
+        document.getElementById("setelah").value = "";
+      } else {
+        document.getElementById("status").innerHTML = "❌ Gagal menyimpan data";
+      }
+    })
+    .catch(() => {
+      document.getElementById("status").innerHTML = "❌ Koneksi bermasalah";
+    });
+  }
+</script>
+
+</body>
+</html>
